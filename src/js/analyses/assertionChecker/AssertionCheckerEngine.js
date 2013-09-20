@@ -11,17 +11,12 @@
         // A map of system independent assertions about different source locations
         // Use `export JALANGI_ACE_PLUGIN=/home/drx/foo/bar/assertions/xyz.js`
         var pluginFile = process.env.JALANGI_ACE_PLUGIN; 
-        // Extra information to link system inpendent source locations to Jalangi system depedent source locations
-        // Use `export JALANGI_ACE_ASSERTIONS=/home/drx/foo/`
-//        var base = process.env.JALANGI_ACE_BASE;
         var plugin = require(pluginFile);
         
         var getIIDInfo = require('./../../utils/IIDInfo');
         function getLocation(iid){
             var info = getIIDInfo(iid);
-            var location = info.replace(/^\((.*)\)$/, "$1");//.replace(new RegExp("^" + base + (base.match(/\/$/) ? "": "/")), "");
-            // console.log("base: " + base);
-            // console.log("converted %s to %s", info, location);
+            var location = info.replace(/^\((.*)\)$/, "$1");
             return location;
         }
 
