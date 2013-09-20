@@ -523,11 +523,15 @@ J$ = {};
             };
         }
 
-        function Fe(iid, val, dis) {
+        function Fe(iid, val, dis, args) {
             executionIndex.executionIndexCall();
             if (rrEngine) {
                 rrEngine.RR_Fe(iid, val, dis);
             }
+            if (sEngine && sEngine.Fe) {
+                sEngine.Fe(iid, val, dis, args);
+            }
+
             returnVal = undefined;
         }
 
@@ -1103,7 +1107,7 @@ J$ = {};
 
                 function getFileHanlde() {
                     if (traceWfh === undefined) {
-                        traceWfh = fs.openSync(TRACE_FILE_NAME, 'w');
+                        traceWfh = fs.openSync(process.argv[2]?process.argv[2]:TRACE_FILE_NAME, 'w');
                     }
                     return traceWfh;
                 }
