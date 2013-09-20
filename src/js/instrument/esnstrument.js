@@ -17,7 +17,7 @@
 // Author: Koushik Sen
 
 (function(sandbox){
-
+    var useSourceMap = process.env.JALANGI_USE_SOURCE_MAP !== "false";
     if (typeof esprima === 'undefined'){
         esprima = require("esprima");
         escodegen = require('escodegen');
@@ -639,7 +639,7 @@
     function createCallAsFunEnterStatement(node) {
         printIidToLoc(node);
         var ret = replaceInStatement(
-            logFunctionEnterFunName+"("+RP+"1,arguments.callee, this)",
+            logFunctionEnterFunName+"("+RP+"1,arguments.callee, this, arguments)",
             getIid()
         );
         transferLoc(ret[0].expression, node);
@@ -708,16 +708,16 @@
 //    }
 
     function prependScriptBody(node, body) {
-        var path = require('path');
-        var preFile = path.resolve(__dirname,'../analysis.js');
-        var inputManagerFile = path.resolve(__dirname,'../InputManager.js');
-        var thisFile = path.resolve(__filename);
+        var preFile = 'src/js/analysis.js';
+        var inputManagerFile = 'src/js/InputManager.js';
+        var thisFile = 'src/js/instrument/esnstrument.js';
 //        var inputFile = path.resolve(process.cwd()+"/inputs.js");
 
         var n_code = 'if (typeof window ==="undefined") {\n' +
-            '    require("'+preFile+'");\n' +
-            '    require("'+inputManagerFile+'");\n' +
-            '    require("'+thisFile+'");\n' +
+            '    var jalangiHome = process.env.JALANGI_HOME;\n' + 
+            '    require(jalangiHome + "/'+preFile+'");\n' +
+            '    require(jalangiHome + "/'+inputManagerFile+'");\n' +
+            '    require(jalangiHome + "/'+thisFile+'");\n' +
             '    require(process.cwd()+"/inputs.js");\n' +
             '}\n';
         var ret = replaceInStatement(n_code+
@@ -1268,7 +1268,9 @@
 //                '    require("'+inputFile+'");\n' +
 //                '}\n'+
             var n_code = code +"\n"+noInstr +"\n";
-            n_code += '\n//@ sourceMappingURL='+fileOnly+'.map';
+            if(useSourceMap){
+                n_code += '\n//@ sourceMappingURL='+fileOnly+'.map';
+            }
             fs.writeFileSync(filename, n_code,"utf8");
             fs.writeFileSync(COVERAGE_FILE_NAME, JSON.stringify({"covered":0, "branches":condCount/inc*2, "coverage":[]}),"utf8");
         }
@@ -1278,8 +1280,9 @@
         writeLine("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n")
         for (i=2; i< args.length; i++) {
             filename = args[i];
-            writeLine("filename = \""+require('path').resolve(process.cwd(),filename)+"\";\n");
-            console.log("Instrumenting "+filename+" ...");
+            //writeLine("filename = \""+require('path').resolve(process.cwd(),filename)+"\";\n");
+            writeLine("filename = \""+filename+"\";\n");
+            //console.log("Instrumenting "+filename+" ...");
             var code = getCode(filename);
             tryCatch = false;
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);
@@ -1288,10 +1291,11 @@
             var newFileName = filename.replace(".js",FILESUFFIX1+".js");
             var fileOnly = path.basename(filename);
             var newFileOnly = path.basename(newFileName);
-            var smap = escodegen.generate(newAst, {sourceMap: fileOnly});
-            smap = smap.replace(fileOnly, newFileOnly);
-            fs.writeFileSync(newFileName+".map", smap,"utf8");
-
+            if(useSourceMap){
+                var smap = escodegen.generate(newAst, {sourceMap: fileOnly});
+                smap = smap.replace(fileOnly, newFileOnly);
+                fs.writeFileSync(newFileName+".map", smap,"utf8");
+            }
             var n_code = escodegen.generate(newAst);
             saveCode(n_code, newFileName, newFileOnly);
         }
