@@ -1,0 +1,10 @@
+*_jalangi_.js
+*_jalangi_.js.map
+*.pyc
+/thirdparty
+# auto generated files (should really be in a /out folder...)
+/jalangi_coverage
+/jalangi_sourcemap.js
+/jalangi_sym_test_results
+/jalangi_tmp
+/jalangi_test_results
