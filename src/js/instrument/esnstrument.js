@@ -22,7 +22,8 @@
         esprima = require("esprima");
         escodegen = require('escodegen');
     }
-
+    
+    sanitizePath = require("../utils/paths").sanitizePath
 
     var FILESUFFIX1 = "_jalangi_";
     var COVERAGE_FILE_NAME = "jalangi_coverage";
@@ -714,6 +715,7 @@
 //        var inputFile = path.resolve(process.cwd()+"/inputs.js");
 
         var n_code = 'if (typeof window ==="undefined") {\n' +
+                // TODO call sanitizePath(..) at runtime?
             '    var jalangiHome = process.env.JALANGI_HOME;\n' + 
             '    require(jalangiHome + "/'+preFile+'");\n' +
             '    require(jalangiHome + "/'+inputManagerFile+'");\n' +
@@ -1280,9 +1282,8 @@
         writeLine("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n")
         for (i=2; i< args.length; i++) {
             filename = args[i];
-            //writeLine("filename = \""+require('path').resolve(process.cwd(),filename)+"\";\n");
-            writeLine("filename = \""+filename+"\";\n");
-            //console.log("Instrumenting "+filename+" ...");
+            writeLine("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
+            console.log("Instrumenting "+filename+" ...");
             var code = getCode(filename);
             tryCatch = false;
             var newAst = transformString(code, [visitorRRPost, visitorOps], [visitorRRPre, undefined]);

@@ -24,13 +24,20 @@ our paper on Jalangi is available at http://srl.cs.berkeley.edu/~ksen/papers/jal
 
 ### Requirements
 
-We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS 10.7 and higher and Ubuntu 11.0 and higher.
+We tested Jalangi on Mac OS X 10.8.  Jalangi should work on Mac OS
+10.7, Ubuntu 11.0 and higher and Windows 7 or higher.
 
   * Latest version of Node.js available at http://nodejs.org/.  We have tested Jalangi with Node v0.8.22 and v0.10.3.
   * Sun's JDK 1.6 or higher.  We have tested Jalangi with Java 1.6.0_43.
   * Command-line git.
   * libgmp (http://gmplib.org/) is required by cvc3.  Concolic testing uses cvc3 and automaton.jar for constraint solving. The installation script checks if cvc3 and automaton.jar are installed properly.
   * Chrome browser if you need to test web apps.
+  * Python (http://python.org) version 2.7 or higher
+  
+On Windows you need the following extra dependencies:
+
+  * Install Microsoft Visual Studio 2010 (Free express version is fine).
+  * If on 64bit also install Windows 7 64-bit SDK.
 
 If you have a fresh installation of Ubuntu, you can install all the requirements by invoking the following commands from a terminal.
 
@@ -43,20 +50,18 @@ If you have a fresh installation of Ubuntu, you can install all the requirements
     sudo apt-get update
     sudo apt-get install oracle-java7-installer
     sudo update-java-alternatives -s java-7-oracle
-    sudo apt-get git
-    sudo apt-get libgmp10
-    sudo apt-get chromium-browser
+    sudo apt-get install git
+    sudo apt-get install libgmp10
+    sudo apt-get install chromium-browser
 
 ### Installation
 
-    ./scripts/install
+    python ./scripts/install.py
 
 If Installation succeeds, you should see the following message:
 
-    ****************************
-    Installation successful.
-    Run ./scripts/testsym to make sure that all tests pass.
-    ****************************
+    ---> Installation successful.
+    ---> run python scripts/sym.py to make sure all tests pass
 
 A Lubuntu virtual machine with pre-installed jalangi can be downloaded from http://srl.cs.berkeley.edu/~ksen/jalangi4.zip.
 You need VirtualBox available at https://www.virtualbox.org/ to run the virtual machine.
@@ -65,29 +70,31 @@ Open a terminal, go to directory jalangi, and try ./scripts/testsym.
 
 ### Run Tests
 
-    ./scripts/testsym
+    python ./scripts/sym.py
 
 ### Other Scripts
 
 Run no analysis and check if record and replay executions produce same output on some unit tests located under tests/unit/.
 
-    ./scripts/testunits
+    python ./scripts/units.py
 
-Run no analysis and check if record and replay executions produce same output on the sunspider benchmarks located under tests/sunspider1/.
+Run no analysis and check if record and replay executions produce same
+output on the sunspider benchmarks located under
+tests/sunspider1/.
 
-    ./scripts/testsp
+    python scripts/testsp.py
 
 Run likely type inference analysis on the sunspider benchmarks located under tests/sunspider1/.
 
-    ./scripts/testsp_likelytype
+    python scripts/testsp_likelytype.py
 
 Run tracker of origin of null and undefined on the sunspider benchmarks located under tests/sunspider1/.
 
-    ./scripts/testsp_tracknull
+    python scripts/testsp_tracknull.py
 
 Run a simple heap profiler on the sunspider benchmarks located under tests/sunspider1/.
 
-    ./scripts/testsp_heapprofiling
+    python scripts/testsp_heapprofiling.py
 
 Record an execution of tests/unit/qsort.js and create jalangi_trace.html which when loaded in a browser replays the execution.
 
@@ -96,57 +103,65 @@ Record an execution of tests/unit/qsort.js and create jalangi_trace.html which w
 
 ### Concolic testing
 
-To perform concolic testing of some JavaScript code present in a file, say testme.js, insert the following 4 lines at the top of the file.
+To perform concolic testing of some JavaScript code present in a file,
+say testme.js, insert the following 4 lines at the top of the file.
 
     if (typeof window === "undefined") {
         require('../../src/js/InputManager');
         require(process.cwd()+'/inputs');
     }
 
-In the code, use J$.readInput(arg) to indicate the inputs to the program.  Then run the following command to perform concolic testing:
+In the code, use J$.readInput(arg) to indicate the inputs to the
+program.  Then run the following command to perform concolic testing:
 
-    ./scripts/concolic testme 100000
+    python scripts/jalangi.py concolic -i 100000 testme
 
-The third argument bounds the total number of test inputs.  The command generates a set of input files in the directory jalangi_tmp.  The input
-files start with the prefix jalangi_inputs.  Once the inputs are generated, you can run testme.js on those inputs by giving the following
-command:
+The -i argument bounds the total number of test inputs.  The
+command generates a set of input files in the directory jalangi_tmp.
+The input files start with the prefix jalangi_inputs.  Once the inputs
+are generated, you can run testme.js on those inputs by giving the
+following command:
 
-    ./scripts/rerunall testme
+     python scripts/jalangi.py rerunall testme
 
 For example, open the file tests/unit/qsort.js and check how inputs are specified.  Then run
 
-    ./scripts/concolic tests/unit/qsort 100
-    ./scripts/rerunall tests/unit/qsort
+     python scripts/jalangi.py concolic tests/unit/qsort 100
+     python scripts/jalangi.py rerunall tests/unit/qsort
 
 
 Open the file tests/unit/regex8.js and check how string inputs are specified.  Then run
 
-    ./scripts/concolic tests/unit/regex8 100
-    ./scripts/rerunall tests/unit/regex8
+     python scripts/jalangi.py concolic tests/unit/regex8 100
+     python scripts/jalangi.py rerunall tests/unit/regex8
 
 
 ### Dynamic analysis
 
-The JavaScript code in src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js implements a simple analysis that reports the number of objects created during
-an execution along with some auxiliary information.  The analysis can be performed on a file testme.js by invoking the following command:
+The JavaScript code in
+src/js/analyses/objectalloc/ObjectAllocationTrackerEngine.js
+implements a simple analysis that reports the number of objects
+created during an execution along with some auxiliary information.
+The analysis can be performed on a file testme.js by invoking the
+following command:
 
-    ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine testme
+    python scripts/jalangi.py analyze -a analyses/objectalloc/ObjectAllocationTrackerEngine testme
 
 For example, try running the analysis on a sunspider benchmark by issuing the following command:
 
-    ./scripts/analysis analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
+    python scripts/jalangi.py analyze -a analyses/objectalloc/ObjectAllocationTrackerEngine tests/sunspider1/crypto-aes
 
 Similarly, you can run a likely type inference analysis on another sunspider benchmark by calling the following command and you will notice some warnings.
 
-    ./scripts/analysis analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
+    python scripts/jalangi.py analyze -a analyses/likelytype/LikelyTypeInferEngine tests/sunspider1/crypto-sha1
 
 Run the following to perform a simple form of taint analysis.
 
-    ./scripts/analysis analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
+	python scripts/jalangi.py analyze -a analyses/simpletaint/SimpleTaintEngine tests/sunspider1/crypto-sha1
 
 You can run origin of null and undefined tracker on a toy example by issuing the following command:
 
-    ./scripts/analysis analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
+    python scripts/jalangi.py analyze -a analyses/trackundefinednull/UndefinedNullTrackingEngine tests/unit/track_undef_null
 
 ### Record and replay a web application.
 
@@ -154,7 +169,7 @@ You can run origin of null and undefined tracker on a toy example by issuing the
 
 First start a HTTP server by running the following command.  The command starts a simple Python based http server.
 
-    ./scripts/server &
+	python scripts/jalangi.py server &
 
 Then instrument the JavaScript files that you want to analyze.  You also need to modify index.html so that it loads some library files and the instrumented files.
 
@@ -162,13 +177,15 @@ Then instrument the JavaScript files that you want to analyze.  You also need to
 
 Finally launch the jalangi server and the html page by running
 
-    ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
+    python scripts/jalangi.py rrserver http://127.0.0.1:8000/tests/tizen/annex/index_jalangi_.html
 
 You can now play the game for sometime.  Try two moves.  This will generate a jalangi_trace1 in the current directory.  You can run a dynamic analysis on the trace file by issuing the following commands.
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/objectalloc/ObjectAllocationTrackerEngine
     node src/js/commands/replay.js jalangi_trace1
+
+## Further examples of record and replay
 
 ***
 
@@ -182,7 +199,7 @@ You can now play the game for sometime.  Try two moves.  This will generate a ja
 ***
 
     node src/js/instrument/esnstrument.js tests/tizen/go/js/go.js
-    ./scripts/rrserver http://127.0.0.1:8000/tests/tizen/go/index.html
+    ./scripts/rrserver http://127.0.0.1:8080/tests/tizen/go/index.html
 
     export JALANGI_MODE=replay
     export JALANGI_ANALYSIS=analyses/likelytype/LikelyTypeInferEngine

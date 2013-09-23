@@ -12,18 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Author: Koushik Sen
+# Author: Simon Jensen
 
-pkill -f "node src/js/commands/socket.js"
-sleep 1
-rm -rf jalangi_trace*
-rm -rf jalangi_taint*
-rm -rf jalangi_dependency
-rm -rf jalangi_next*
-rm -rf ok_jalangi_next*
-cp next.js jalangi_next.js
-node src/js/commands/socket.js 127.0.0.1 8080 $1 &
-sleep 2
-echo "Opening $1"
-/usr/bin/open -a "/Applications/Google Chrome.app" $1 || chromium-browser $1 || echo "Do you have chrome installed?"
-
+import sys
+import os
+scriptpath = os.path.join(os.path.dirname(os.path.realpath(__file__)),"../src/python/")
+sys.path.insert(0,scriptpath)
+from jalangi_command import main
+if __name__ == "__main__":
+    main()
