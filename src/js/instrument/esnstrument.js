@@ -1282,7 +1282,7 @@
         writeLine("(function (sandbox) { var iids = sandbox.iids = []; var filename;\n")
         for (i=2; i< args.length; i++) {
             filename = args[i];
-            writeLine("filename = \"" + sanitizePath(require('path').resolve(process.cwd(),filename)) + "\";\n");
+            writeLine("filename = \"" + sanitizePath(filename) + "\";\n");
             console.log("Instrumenting "+filename+" ...");
             var code = getCode(filename);
             tryCatch = false;
